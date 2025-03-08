@@ -1,25 +1,27 @@
 #pragma once
 
-#include <string>
-#include "../Dependencies/sqlite3cpp/sqlite3.h"
+#include <QString>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QSqlError>
 #include "../Logger/Logger.h"
 
 class DatabaseManager {
 public:
-    DatabaseManager(const std::string& path);
+    DatabaseManager(const QString& path);
     ~DatabaseManager();
 
     bool open();
-    bool prepareQuery(const std::string& query);
+    bool prepareQuery(const QString& query);
     bool step();
-    int  getIntColumn(int index);
+    int getIntColumn(int index);
+    void close();
 
 private:
-    sqlite3* _db;
-    sqlite3_stmt* _stmt;
-    std::string _dbPath;
-
-    void close();
     void finalize();
-};
 
+    QSqlDatabase m_db;
+    QSqlQuery m_query;
+    QString m_dbPath;
+    QString m_connectionName;
+};

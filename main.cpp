@@ -1,8 +1,32 @@
+// #include "Forms/mainwindow.h"
+
+// #include <QApplication>
+// #include <QLocale>
+// #include <QTranslator>
+
+// int main(int argc, char *argv[])
+// {
+//     QApplication a(argc, argv);
+
+//     QTranslator translator;
+//     const QStringList uiLanguages = QLocale::system().uiLanguages();
+//     for (const QString &locale : uiLanguages) {
+//         const QString baseName = "dotaplusfordesperatepeople_" + QLocale(locale).name();
+//         if (translator.load(":/i18n/" + baseName)) {
+//             a.installTranslator(&translator);
+//             break;
+//         }
+//     }
+//     MainWindow w;
+//     w.show();
+//     return a.exec();
+// }
+
+#include <QCoreApplication>
 #include <string>
 #include <vector>
 
 #include "Utils/Utility.h"
-#include "Dependencies/sqlite3cpp/sqlite3.h"
 #include "DB/DatabaseManager.h"
 #include "MemoryManager/MemoryManager.h"
 
@@ -57,9 +81,11 @@ void ScanForTimeAddress(MemoryManager& memmng, const std::vector<row>& rows, cha
     }
 }
 
-int main()
+int main(int argc, char* argv[])
 {
+    QCoreApplication app(argc, argv);
     Logger& logger = Logger::getInstance();
+
 
     std::vector<row> rows = fullRows();
 
@@ -99,9 +125,9 @@ int main()
         LOG("Vector is empty!");
         return 0;
     }
-    
-    
-    
+
+
+
     system("pause");
 
     return 0;

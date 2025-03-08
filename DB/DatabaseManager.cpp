@@ -1,51 +1,59 @@
 #include "DatabaseManager.h"
 
-DatabaseManager::DatabaseManager(const std::string& path)
-    : _db(nullptr), _stmt(nullptr), _dbPath(path)
-{}
+DatabaseManager::DatabaseManager(const QString& path)
+    : m_dbPath(path) {
+    static int connectionCount = 0;
+    m_connectionName = QString("SQLiteConnection_%1").arg(connectionCount++);
+    m_db = QSqlDatabase::addDatabase("QSQLITE", m_connectionName);
+    m_db.setDatabaseName(m_dbPath);
+}
 
 DatabaseManager::~DatabaseManager() {
     close();
+    if (QSqlDatabase::contains(m_connectionName)) {
+        QSqlDatabase::removeDatabase(m_connectionName);
+    }
 }
 
 bool DatabaseManager::open() {
-    int rc = sqlite3_open_v2(_dbPath.c_str(), &_db, SQLITE_OPEN_READONLY, nullptr);
-    if (rc != SQLITE_OK) {
-        LOG("Failed to open database: " + std::string(sqlite3_errmsg(_db)));
+    m_db.setConnectOptions("QSQLITE_OPEN_READONLY");
+    if (!m_db.open()) {
+        qCritical() << "Database open error:" << m_db.lastError().text();
         return false;
     }
-    LOG("Database opened successfully");
+    qInfo() << "Opened database in read-only mode";
     return true;
 }
 
-bool DatabaseManager::prepareQuery(const std::string& query) {
-    int rc = sqlite3_prepare_v2(_db, query.c_str(), -1, &_stmt, nullptr);
-    if (rc != SQLITE_OK) {
-        LOG("Failed to prepare query: " + std::string(sqlite3_errmsg(_db)));
+bool DatabaseManager::prepareQuery(const QString& query) {
+    m_query = QSqlQuery(m_db);
+    if (!m_query.prepare(query)) {
+        qCritical() << "Query prepare error:" << m_query.lastError().text();
+        return false;
+    }
+    if (!m_query.exec()) {
+        qCritical() << "Query exec error:" << m_query.lastError().text();
         return false;
     }
     return true;
 }
 
 bool DatabaseManager::step() {
-    return sqlite3_step(_stmt) == SQLITE_ROW;
+    return m_query.next();
 }
 
 int DatabaseManager::getIntColumn(int index) {
-    return sqlite3_column_int(_stmt, index);
+    return m_query.value(index).toInt();
 }
 
 void DatabaseManager::finalize() {
-    if (_stmt) {
-        sqlite3_finalize(_stmt);
-        _stmt = nullptr;
-    }
+    m_query.finish();
 }
 
 void DatabaseManager::close() {
     finalize();
-    if (_db) {
-        sqlite3_close(_db);
-        _db = nullptr;
+    if (m_db.isOpen()) {
+        m_db.close();
+        qInfo() << "Database closed";
     }
 }
