@@ -1,0 +1,5 @@
+{
+  "version": "1.0.0",
+  "dota2_patch": "7.38",
+  "database_name": "7.38lobby.sqlite"
+}
