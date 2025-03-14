@@ -29,6 +29,7 @@
 #include "Utils/Utility.h"
 #include "DB/DatabaseManager.h"
 #include "MemoryManager/MemoryManager.h"
+#include "Updater/updater.h"
 
 
 struct row
@@ -40,7 +41,7 @@ struct row
 
 std::vector<row> fullRows()
 {
-    DatabaseManager database("7.38lobby.sqlite");
+    DatabaseManager database("database.sqlite");
     std::vector<row> rows;
     if (database.open()) {
         const char* sql = R"(SELECT moduleid, moduleoffset, offset1, offset2, offset3, offset4, offset5, offset6, offset7 FROM results)";
@@ -83,7 +84,12 @@ void ScanForTimeAddress(MemoryManager& memmng, const std::vector<row>& rows, cha
 
 int main(int argc, char* argv[])
 {
+
+
     QCoreApplication app(argc, argv);
+    Updater updater;
+    updater.checkForUpdates();
+
     Logger& logger = Logger::getInstance();
 
 
@@ -130,5 +136,5 @@ int main(int argc, char* argv[])
 
     system("pause");
 
-    return 0;
+    return app.exec();
 }

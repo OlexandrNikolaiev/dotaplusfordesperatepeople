@@ -2,7 +2,8 @@ cmake_minimum_required(VERSION 3.19)
 project(dotaplusfordesperatepeople LANGUAGES CXX)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
-find_package(Qt6 REQUIRED COMPONENTS Core Sql)
+find_package(Qt6 REQUIRED COMPONENTS Sql)
+find_package(Qt6 REQUIRED COMPONENTS Network )
 
 qt_standard_project_setup()
 
@@ -19,6 +20,7 @@ qt_add_executable(dotaplusfordesperatepeople
     ProcessManager/ProcessManager.h
     Utils/Utility.cpp
     Utils/Utility.h
+    Updater/updater.h Updater/updater.cpp
 )
 
 qt_add_translations(
@@ -31,6 +33,7 @@ target_link_libraries(dotaplusfordesperatepeople
         Qt::Core
         Qt::Widgets
         Qt6::Sql
+        Qt6::Network
 )
 
 include(GNUInstallDirs)

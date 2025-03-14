@@ -6,15 +6,31 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <QString>
 
 #include "../Utils/Utility.h"
 
-#define LOG(message) Logger::log(message, __FUNCTION__)
+#define LOG(message) Logger::logWrapper(message, __FUNCTION__)
 
-class Logger { //todo
+class Logger {
 public:
     static Logger& getInstance();
+
     static void log(const std::string& message, const std::string& function);
+    static void log(const QString& message, const std::string& function);
+
+    static void logWrapper(const char* message, const std::string& function) {
+        log(std::string(message), function);
+    }
+
+    template <typename T>
+    static void logWrapper(const T& message, const std::string& function) {
+        log(message, function);
+    }
+
+    static void logWrapper(const QString& message, const std::string& function) {
+        log(message, function);
+    }
 
 private:
     Logger(const std::string& filename);
@@ -27,4 +43,3 @@ private:
     static std::string getCurrentDateTime();
     static std::ofstream _logFile;
 };
-
