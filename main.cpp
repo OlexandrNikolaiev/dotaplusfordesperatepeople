@@ -22,7 +22,7 @@
 //     return a.exec();
 // }
 
-#include <QCoreApplication>
+#include <QApplication>
 #include <string>
 #include <vector>
 
@@ -30,14 +30,13 @@
 #include "DB/DatabaseManager.h"
 #include "MemoryManager/MemoryManager.h"
 #include "Updater/updater.h"
+#include "TimeNotifier/timenotifier.h"
+
+#include "OverlayManager/overlaymanager.h"
+#include "MemoryManager/row.h"
+#include "MemoryManager/memoryworker.h"
 
 
-struct row
-{
-    int moduleID;
-    uintptr_t moduleOffset;
-    std::vector<uintptr_t> offsets;
-};
 
 std::vector<row> fullRows()
 {
@@ -64,77 +63,44 @@ std::vector<row> fullRows()
     return rows;
 }
 
-void ScanForTimeAddress(MemoryManager& memmng, const std::vector<row>& rows, char* timeInGame)
-{
-    LOG("Scanning for valid time address");
-    bool isAddressFound = false;
-    while (!isAddressFound) {
-        for (const auto& r : rows) {
-            if (memmng.ReadPointerChain(r.moduleID, r.moduleOffset, r.offsets)) {
-                if (memmng.ReadMemory()) {
-                    if (Utility::isValidTimeFormat(timeInGame)) {
-                        isAddressFound = true;
-                        break;
-                    }
-                }
-            }
-        }
-    }
-}
+
 
 int main(int argc, char* argv[])
 {
-
-
-    QCoreApplication app(argc, argv);
+    QApplication app(argc, argv);
     Updater updater;
     updater.checkForUpdates();
 
     Logger& logger = Logger::getInstance();
-
+    TimeNotifier* timemng = new TimeNotifier();
 
     std::vector<row> rows = fullRows();
-
     char timeInGame[7];
     MemoryManager memmng(timeInGame);
 
     if (!rows.empty())
     {
-        bool isAddressCorrect = false;
-        while (true) {
-            if (!isAddressCorrect) {
-                ScanForTimeAddress(memmng, rows, timeInGame);
-            }
-            if (memmng.ReadMemory()) {
-                if (Utility::isValidTimeFormat(timeInGame)) {
-                    //std::string currentTime = std::string(timeInGame); // todo: check for 1:15
+        MemoryWorker* worker = new MemoryWorker(rows, &memmng, timeInGame, timemng);
+        QThread* thread = new QThread;
+        worker->moveToThread(thread);
 
-                    std::cout << "Time = " << timeInGame << std::endl;
-                    isAddressCorrect = true;
-                }
-                else
-                {
-                    isAddressCorrect = false;
-                    continue;
-                }
-            }
-            else
-            {
-                isAddressCorrect = false;
-                continue;
-            }
-            Sleep(1000);
-        }
+        QObject::connect(thread, &QThread::started, worker, &MemoryWorker::process);
+        QObject::connect(worker, &QObject::destroyed, thread, &QThread::quit);
+        QObject::connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+        QObject::connect(thread, &QThread::finished, thread, &QThread::deleteLater);
+
+        QObject::connect(&app, &QApplication::aboutToQuit, worker, [worker]() {
+            worker->_isRunning = false;
+        });
+
+        thread->start();
+        qDebug() << "Thread started";
     }
-    else
-    {
+    else {
         LOG("Vector is empty!");
         return 0;
     }
 
-
-
-    system("pause");
-
     return app.exec();
 }
+

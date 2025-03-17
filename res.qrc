@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/sounds">
+        <file>resources/sounds/neutral_item.wav</file>
+        <file>resources/sounds/rune.wav</file>
+        <file>resources/sounds/stack.wav</file>
+    </qresource>
+</RCC>

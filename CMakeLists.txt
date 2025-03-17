@@ -3,9 +3,11 @@ project(dotaplusfordesperatepeople LANGUAGES CXX)
 
 find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets LinguistTools)
 find_package(Qt6 REQUIRED COMPONENTS Sql)
-find_package(Qt6 REQUIRED COMPONENTS Network )
+find_package(Qt6 REQUIRED COMPONENTS Network)
+find_package(Qt6 REQUIRED COMPONENTS Multimedia)
 
 qt_standard_project_setup()
+qt_add_resources(APP_SOURCES res.qrc)
 
 qt_add_executable(dotaplusfordesperatepeople
     WIN32 MACOSX_BUNDLE
@@ -21,7 +23,17 @@ qt_add_executable(dotaplusfordesperatepeople
     Utils/Utility.cpp
     Utils/Utility.h
     Updater/updater.h Updater/updater.cpp
+    TimeNotifier/timenotifier.h TimeNotifier/timenotifier.cpp
+    SoundManager/soundmanager.h
+    SoundManager/soundPaths.h
+    OverlayManager/overlaymanager.h OverlayManager/overlaymanager.cpp
+    MemoryManager/memoryworker.h MemoryManager/memoryworker.cpp
+    MemoryManager/row.h
 )
+target_sources(dotaplusfordesperatepeople PRIVATE ${APP_SOURCES})
+
+#target_sources(dotaplusfordesperatepeople PRIVATE ${APP_SOURCES} ${RESOURCE_FILES})
+
 
 qt_add_translations(
     TARGETS dotaplusfordesperatepeople
@@ -34,6 +46,7 @@ target_link_libraries(dotaplusfordesperatepeople
         Qt::Widgets
         Qt6::Sql
         Qt6::Network
+        Qt6::Multimedia
 )
 
 include(GNUInstallDirs)
